@@ -1,3 +1,6 @@
-To run the example : 
+Download jMonkeyEngine3
+current : http://jmonkeyengine.com/nightly/jME3_01-07-2011.zip
 
-java -Djava.native.path=src/main/natives/windows -cp target/classes net.isammoc.HexapodFrame
+Extract it
+
+Set the <jme.path> property in pom.xml

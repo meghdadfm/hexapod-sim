@@ -6,7 +6,9 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Hexapod-sim</name>
 	<description>Simulation of an hexapod-kit</description>
-
+	<properties>
+		<jme.path>${basedir}/../../jME3_01-07-2011</jme.path>
+	</properties>
 	<build>
 		<plugins>
 			<plugin>
@@ -26,98 +28,98 @@
 			<artifactId>gluegen-rt</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/gluegen-rt.jar</systemPath>
+			<systemPath>${jme.path}/lib/gluegen-rt.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>jogl</groupId>
 			<artifactId>jogl</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jogl.jar</systemPath>
+			<systemPath>${jme.path}/lib/jogl.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>j-ogg-oggd</groupId>
 			<artifactId>j-ogg-oggd</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/j-ogg-oggd.jar</systemPath>
+			<systemPath>${jme.path}/lib/j-ogg-oggd.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>j-ogg-vorbisd</groupId>
 			<artifactId>j-ogg-vorbisd</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/j-ogg-vorbisd.jar</systemPath>
+			<systemPath>${jme.path}/lib/j-ogg-vorbisd.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>jbullet</groupId>
 			<artifactId>jbullet</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jbullet.jar</systemPath>
+			<systemPath>${jme.path}/lib/jbullet.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>stack-alloc</groupId>
 			<artifactId>stack-alloc</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/stack-alloc.jar</systemPath>
+			<systemPath>${jme.path}/lib/stack-alloc.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>vecmath</groupId>
 			<artifactId>vecmath</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/vecmath.jar</systemPath>
+			<systemPath>${jme.path}/lib/vecmath.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>jinput</groupId>
 			<artifactId>jinput</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jinput.jar</systemPath>
+			<systemPath>${jme.path}/lib/jinput.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/lwjgl.jar</systemPath>
+			<systemPath>${jme.path}/lib/lwjgl.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>com.jmonkeyengine</groupId>
 			<artifactId>jme3-jogl-natives</artifactId>
 			<version>3.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jME3-jogl-natives.jar</systemPath>
+			<systemPath>${jme.path}/lib/jME3-jogl-natives.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>com.jmonkeyengine</groupId>
 			<artifactId>jme3-lwjgl-natives</artifactId>
 			<version>3.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jME3-lwjgl-natives.jar</systemPath>
+			<systemPath>${jme.path}/lib/jME3-lwjgl-natives.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>jheora</groupId>
 			<artifactId>jheora-debug</artifactId>
 			<version>0.6.0</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jheora-debug-0.6.0.jar</systemPath>
+			<systemPath>${jme.path}/lib/jheora-debug-0.6.0.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>com.jmonkeyengine</groupId>
 			<artifactId>jMonkeyEngine</artifactId>
 			<version>3.0-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/jMonkeyEngine3.jar</systemPath>
+			<systemPath>${jme.path}/jMonkeyEngine3.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>nifty</groupId>
 			<artifactId>nifty</artifactId>
 			<version>1.2-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${basedir}/src/main/lib/nifty-1.2-SNAPSHOT.jar</systemPath>
+			<systemPath>${jme.path}/lib/nifty-1.2-SNAPSHOT.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>net.isammoc</groupId>
