@@ -42,6 +42,27 @@ public class HexapodJME extends SimpleApplication {
 		}
 	}
 
+	/** Model for joints */
+	private Map<HexapodLeg, Map<HexapodArticulation, Integer>> model;
+	{
+		this.model = new EnumMap<HexapodLeg, Map<HexapodArticulation, Integer>>(HexapodLeg.class);
+		for (final HexapodLeg leg : HexapodLeg.values()) {
+			this.model.put(leg, new EnumMap<HexapodArticulation, Integer>(HexapodArticulation.class));
+			for (final HexapodArticulation articulation : HexapodArticulation.values()) {
+				this.model.get(leg).put(articulation, 0);
+			}
+		}
+	}
+
+	/** Angles for model equals 0. */
+	private Map<HexapodLeg, Map<HexapodArticulation, Float>> zeroAngles;
+	{
+		this.zeroAngles = new EnumMap<HexapodLeg, Map<HexapodArticulation, Float>>(HexapodLeg.class);
+		for (final HexapodLeg leg : HexapodLeg.values()) {
+			this.zeroAngles.put(leg, new EnumMap<HexapodArticulation, Float>(HexapodArticulation.class));
+		}
+	}
+
 	/** Hexapod shape factory. */
 	private final HexapodShapeFactory shapeFactory = new HexapodShapeFactory();
 
@@ -93,9 +114,8 @@ public class HexapodJME extends SimpleApplication {
 		this.createLeg(baseNode, HexapodLeg.RIGHT_FRONT, transform, new Vector3f(-3.0f, 1f, 4.5f), -0.588f);
 		this.createLeg(baseNode, HexapodLeg.RIGHT_MIDDLE, transform, new Vector3f(-3.8f, 1f, 0f),
 				-FastMath.HALF_PI);
-		this.createLeg(baseNode, HexapodLeg.RIGHT_MIDDLE, transform, new Vector3f(-3.0f, 1f, -4.5f),
+		this.createLeg(baseNode, HexapodLeg.RIGHT_REAR, transform, new Vector3f(-3.0f, 1f, -4.5f),
 				0.588f - FastMath.PI);
-
 	}
 
 	/**
@@ -139,6 +159,7 @@ public class HexapodJME extends SimpleApplication {
 		shoulder.enableMotor(true, 0, 1);
 		shoulder.setCollisionBetweenLinkedBodys(false);
 		this.joints.get(leg).put(HexapodArticulation.SHOULDER, shoulder);
+		this.zeroAngles.get(leg).put(HexapodArticulation.SHOULDER, shoulder.getHingeAngle());
 	}
 
 	/**
@@ -165,6 +186,7 @@ public class HexapodJME extends SimpleApplication {
 		elbow.setCollisionBetweenLinkedBodys(false);
 		elbow.enableMotor(true, 0, 1);
 		this.joints.get(leg).put(HexapodArticulation.ELBOW, elbow);
+		this.zeroAngles.get(leg).put(HexapodArticulation.ELBOW, elbow.getHingeAngle());
 
 		return shoulderNode;
 	}
@@ -185,6 +207,7 @@ public class HexapodJME extends SimpleApplication {
 		wrist.enableMotor(true, 0, 1);
 		wrist.setCollisionBetweenLinkedBodys(false);
 		this.joints.get(leg).put(HexapodArticulation.WRIST, wrist);
+		this.zeroAngles.get(leg).put(HexapodArticulation.WRIST, wrist.getHingeAngle());
 
 		return armNode;
 	}
@@ -222,5 +245,30 @@ public class HexapodJME extends SimpleApplication {
 
 	@Override
 	public void simpleUpdate(final float tpf) {
+		for (final HexapodLeg leg : HexapodLeg.values()) {
+			for (final HexapodArticulation articulation : HexapodArticulation.values()) {
+				final PhysicsHingeJoint joint = this.joints.get(leg).get(articulation);
+				final float zeroAngle = this.zeroAngles.get(leg).get(articulation);
+				final float current = joint.getHingeAngle();
+				final int wanted = this.model.get(leg).get(articulation);
+				final float stepAngle = FastMath.PI / 256;
+
+				final float wantedAngle = zeroAngle + wanted * stepAngle;
+
+				if (Math.abs(current - wantedAngle) < FastMath.PI / 90) {
+					joint.enableMotor(true, 0, 1);
+				} else if (current < wantedAngle) {
+					joint.enableMotor(true, 1, 1);
+				} else {
+					joint.enableMotor(true, -1, 1);
+				}
+				joint.getBodyA().activate();
+				joint.getBodyB().activate();
+			}
+		}
+	}
+
+	public Map<HexapodLeg, Map<HexapodArticulation, Integer>> getModel() {
+		return this.model;
 	}
 }
