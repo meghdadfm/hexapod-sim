@@ -32,6 +32,7 @@
 
 package net.isammoc.hexapod;
 
+import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -149,8 +150,7 @@ public class HexapodFrame {
 		JmeSystem.setLowPermissions(true);
 
 		try {
-			final Class<? extends Application> clazz = (Class<? extends Application>) Class
-					.forName(appClass);
+			final Class<? extends Application> clazz = (Class<? extends Application>) Class.forName(appClass);
 			app = clazz.newInstance();
 		} catch (final ClassNotFoundException ex) {
 			ex.printStackTrace();
@@ -195,6 +195,8 @@ public class HexapodFrame {
 				createCanvas(HexapodJME.class.getName());
 				createFrame();
 				frame.getContentPane().add(canvas);
+				frame.getContentPane().add(new HexapodControlPanel(((HexapodJME) app).getModel()),
+						BorderLayout.EAST);
 				frame.pack();
 				startApp();
 				frame.setLocationRelativeTo(null);
