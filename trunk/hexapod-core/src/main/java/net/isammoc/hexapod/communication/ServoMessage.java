@@ -23,4 +23,8 @@ public class ServoMessage extends BasicMessage {
 	public void setUnsignedByte(final HexapodServo servo, final int value) {
 		this.setUnsignedByte(servo.ordinal(), value);
 	}
+
+	public int getUnsignedByte(final HexapodServo servo) {
+		return super.getUnsignedByte(servo.ordinal());
+	}
 }
