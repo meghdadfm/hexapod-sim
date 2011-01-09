@@ -7,7 +7,7 @@
 	<name>Hexapod-sim</name>
 	<description>Simulation of an hexapod-kit</description>
 	<properties>
-		<jme.path>${basedir}/../jme3/dist</jme.path>
+		<jme.path>${basedir}/../../jme3/dist</jme.path>
 	</properties>
 	<build>
 		<plugins>
@@ -19,7 +19,61 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
+				<artifactId>launch4j-plugin</artifactId>
+				<version>1.5.0.0</version>
+				<executions>
+					<execution>
+						<id>launch4j</id>
+						<phase>package</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+						<configuration>
+							<dontWrapJar>false</dontWrapJar>
+							<headerType>gui</headerType>
+							<outfile>target/hexapod-sim-${project.version}.exe</outfile>
+							<jar>target/hexapod-sim-${project.version}.jar</jar>
+							<errTitle>Hexapod-sim</errTitle>
+							<classPath>
+								<mainClass>net.isammoc.hexapod.HexapodFrame</mainClass>
+								<addDependencies>false</addDependencies>
+								<preCp>lib/*</preCp>
+							</classPath>
+							<jre>
+								<minVersion>1.6.0</minVersion>
+							</jre>
+							<versionInfo>
+								<fileVersion>1.2.3.4</fileVersion>
+								<txtFileVersion>txt file version?</txtFileVersion>
+								<fileDescription>a description</fileDescription>
+								<copyright>my copyright</copyright>
+								<productVersion>4.3.2.1</productVersion>
+								<txtProductVersion>txt product version</txtProductVersion>
+								<productName>E-N-C-C</productName>
+								<internalName>ccne</internalName>
+								<originalFilename>original.exe</originalFilename>
+							</versionInfo>
+
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.2</version>
+					<configuration>
+						<descriptors>
+							<descriptor>src/assembly/dist-win32.xml</descriptor>
+						</descriptors>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 	<dependencies>
