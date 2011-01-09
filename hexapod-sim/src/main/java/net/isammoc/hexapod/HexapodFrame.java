@@ -32,6 +32,13 @@
 
 package net.isammoc.hexapod;
 
+import gnu.io.CommPort;
+import gnu.io.CommPortIdentifier;
+import gnu.io.NoSuchPortException;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
+import gnu.io.UnsupportedCommOperationException;
+
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.event.ActionEvent;
@@ -47,6 +54,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+
+import net.isammoc.hexapod.communication.HexapodMessageInputStream;
+import net.isammoc.hexapod.communication.LegMessage;
 
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -185,24 +195,74 @@ public class HexapodFrame {
 	}
 
 	public static void main(final String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+		try {
+			final HexapodControlPanel[] handler = new HexapodControlPanel[1];
+			SwingUtilities.invokeAndWait(new Runnable() {
+				@Override
+				public void run() {
+					JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
-				// final String appClass = "jme3test.model.shape.TestBox";
+					// final String appClass = "jme3test.model.shape.TestBox";
 
-				createCanvas(HexapodJME.class.getName());
-				createFrame();
-				frame.getContentPane().add(canvas);
-				frame.getContentPane().add(new HexapodControlPanel(((HexapodJME) app).getModel()),
-						BorderLayout.EAST);
-				frame.pack();
-				startApp();
-				frame.setLocationRelativeTo(null);
-				frame.setVisible(true);
+					createCanvas(HexapodJME.class.getName());
+					createFrame();
+					frame.getContentPane().add(canvas);
+					handler[0] = new HexapodControlPanel(new HexapodConverter(((HexapodJME) app).getModel()));
+					frame.getContentPane().add(handler[0], BorderLayout.EAST);
+					frame.pack();
+					startApp();
+					frame.setLocationRelativeTo(null);
+					frame.setVisible(true);
+				}
+			});
+
+			if (args.length > 0) {
+				final String portName = args[0];
+				try {
+					SerialPort serial;
+					final CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
+					try {
+						final CommPort commPort = portIdentifier.open(HexapodFrame.class.getName(), 2000);
+						if (!(commPort instanceof SerialPort)) {
+							commPort.close();
+							throw new ClassCastException("portName '" + portName
+									+ "' does not refer to a serial port");
+						}
+
+						serial = (SerialPort) commPort;
+						try {
+							serial.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
+									SerialPort.PARITY_NONE);
+							final HexapodMessageInputStream in = new HexapodMessageInputStream(
+									serial.getInputStream());
+							while (true) {
+								final LegMessage readMessage = in.readMessage();
+								for (final HexapodLeg leg : HexapodLeg.values()) {
+									for (final HexapodArticulation articulation : HexapodArticulation
+											.values()) {
+										// TODO
+										handler[0].getSpinModels().get(leg).get(articulation)
+												.setValue(readMessage.getUnsignedByte(leg, articulation));
+									}
+								}
+							}
+						} catch (final UnsupportedCommOperationException e) {
+							serial.close();
+							throw new HexapodException("Can not configure port", e);
+						}
+					} catch (final PortInUseException e) {
+						throw new HexapodException("Port '" + portName + "' is already owned by : "
+								+ portIdentifier.getCurrentOwner(), e);
+					}
+				} catch (final NoSuchPortException e) {
+					throw new HexapodException("port '" + portName + "' not found", e);
+				}
+
 			}
-		});
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
