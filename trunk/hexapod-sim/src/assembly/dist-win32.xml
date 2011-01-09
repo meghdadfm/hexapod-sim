@@ -1,0 +1,30 @@
+<assembly>
+	<id>dist-win32</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<fileSets>
+		<fileSet>
+			<includes>
+				<include>*.dll</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>target</directory>
+			<includes>
+				<include>*.exe</include>
+			</includes>
+			<outputDirectory></outputDirectory>
+		</fileSet>
+	</fileSets>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>lib</outputDirectory>
+			<scope>runtime</scope>
+		</dependencySet>
+		<dependencySet>
+			<outputDirectory>lib</outputDirectory>
+			<scope>system</scope>
+		</dependencySet>
+	</dependencySets>
+</assembly>
