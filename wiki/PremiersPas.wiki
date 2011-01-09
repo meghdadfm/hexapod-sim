@@ -15,7 +15,7 @@ Dans cette page, nous vous présenterons comment débuter.
 = Premier pas =
 
 Au lancement de l'application, il vous sera demandé de choisir le port série de communication avec votre piloteur.
-Celui-ci devra envoyer des messages conformes à ce qu'attend le vrai hexapod (http://www.hexapod-kit.fr)
+Celui-ci devra envoyer des messages conformes à ce qu'attend le vrai hexapod (http://www.hexapod-kit.com)
 
 Une fois choisi, le port série ne peut plus être changé (il faut redémarrer l'application).
 
