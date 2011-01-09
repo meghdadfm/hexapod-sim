@@ -2,6 +2,7 @@ package net.isammoc.hexapod.communication;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.net.ProtocolException;
 
 public class HexapodMessageInputStream extends InputStream {
@@ -68,16 +69,16 @@ public class HexapodMessageInputStream extends InputStream {
 			throws IOException {
 		final LegMessage msg = new LegMessage();
 
-		System.out.println("Debut lecture");
 		int readDebut;
 		do {
 			readDebut = this.in.read();
+			if (Thread.interrupted()) {
+				throw new InterruptedIOException();
+			}
 		} while (readDebut != 255);
 		if (readDebut != 255) {
-			System.out.println("Pas 255 au début ??? : " + readDebut);
 			throw new ProtocolException();
 		}
-		System.out.println("Début du message");
 		byte sum = 0;
 		for (int i = 0; i < 21; i++) {
 			final byte read = (byte) this.in.read();
@@ -86,10 +87,8 @@ public class HexapodMessageInputStream extends InputStream {
 		}
 		final byte realSum = (byte) this.in.read();
 		if (realSum != sum) {
-			System.out.println("Pas la bonne somme");
 			throw new ProtocolException();
 		}
-		System.out.println("Message lu");
 		return msg;
 	}
 }

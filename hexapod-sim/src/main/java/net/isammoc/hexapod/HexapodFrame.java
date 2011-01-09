@@ -32,31 +32,23 @@
 
 package net.isammoc.hexapod;
 
-import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
-
-import net.isammoc.hexapod.communication.HexapodMessageInputStream;
-import net.isammoc.hexapod.communication.LegMessage;
 
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
@@ -81,78 +73,9 @@ public class HexapodFrame {
 				app.stop();
 			}
 		});
-
-		final JMenuBar menuBar = new JMenuBar();
-		frame.setJMenuBar(menuBar);
-
-		final JMenu menuFile = new JMenu("File");
-		menuBar.add(menuFile);
-
-		final JMenuItem itemRemoveCanvas = new JMenuItem("Remove Canvas");
-		menuFile.add(itemRemoveCanvas);
-		itemRemoveCanvas.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				if (itemRemoveCanvas.getText().equals("Remove Canvas")) {
-					frame.getContentPane().remove(canvas);
-
-					// force OS to repaint over canvas ..
-					// this is needed since AWT does not handle
-					// that when a heavy-weight component is removed.
-					frame.setVisible(false);
-					frame.setVisible(true);
-					frame.requestFocus();
-
-					itemRemoveCanvas.setText("Add Canvas");
-				} else if (itemRemoveCanvas.getText().equals("Add Canvas")) {
-					frame.getContentPane().add(canvas);
-
-					itemRemoveCanvas.setText("Remove Canvas");
-				}
-			}
-		});
-
-		final JMenuItem itemKillCanvas = new JMenuItem("Stop/Start Canvas");
-		menuFile.add(itemKillCanvas);
-		itemKillCanvas.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				frame.getContentPane().remove(canvas);
-				app.stop(true);
-
-				final String appClass = "jme3test.model.shape.TestBox";
-				createCanvas(appClass);
-				frame.getContentPane().add(canvas);
-				frame.pack();
-				startApp();
-			}
-		});
-
-		final JMenuItem itemExit = new JMenuItem("Exit");
-		menuFile.add(itemExit);
-		itemExit.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(final ActionEvent ae) {
-				frame.dispose();
-				app.stop();
-			}
-		});
-
-		final JMenu menuEdit = new JMenu("Edit");
-		menuBar.add(menuEdit);
-		final JMenuItem itemDelete = new JMenuItem("Delete");
-		menuEdit.add(itemDelete);
-
-		final JMenu menuView = new JMenu("View");
-		menuBar.add(menuView);
-		final JMenuItem itemSetting = new JMenuItem("Settings");
-		menuView.add(itemSetting);
-
-		final JMenu menuHelp = new JMenu("Help");
-		menuBar.add(menuHelp);
 	}
 
-	public static void createCanvas(final String appClass) {
+	public static void createCanvas(final Class<? extends Application> appClass) {
 		final AppSettings settings = new AppSettings(true);
 		settings.setWidth(640);
 		settings.setHeight(480);
@@ -160,10 +83,7 @@ public class HexapodFrame {
 		JmeSystem.setLowPermissions(true);
 
 		try {
-			final Class<? extends Application> clazz = (Class<? extends Application>) Class.forName(appClass);
-			app = clazz.newInstance();
-		} catch (final ClassNotFoundException ex) {
-			ex.printStackTrace();
+			app = appClass.newInstance();
 		} catch (final InstantiationException ex) {
 			ex.printStackTrace();
 		} catch (final IllegalAccessException ex) {
@@ -196,15 +116,33 @@ public class HexapodFrame {
 
 	public static void main(final String[] args) {
 		try {
+			final String portName;
+			if (args.length > 0) {
+				portName = args[0];
+			} else {
+				final ArrayList<String> ports = new ArrayList<String>();
+				final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier
+						.getPortIdentifiers();
+				ports.add("<none>");
+				while (portIdentifiers.hasMoreElements()) {
+					ports.add(portIdentifiers.nextElement().getName());
+				}
+				final String chosen = (String) JOptionPane.showInputDialog(null,
+						"Choose a port to connect to", "Serial port", JOptionPane.PLAIN_MESSAGE, null,
+						ports.toArray(), null);
+				if ("<none>".equals(chosen)) {
+					portName = null;
+				} else {
+					portName = chosen;
+				}
+			}
+
 			final HexapodControlPanel[] handler = new HexapodControlPanel[1];
 			SwingUtilities.invokeAndWait(new Runnable() {
 				@Override
 				public void run() {
 					JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-
-					// final String appClass = "jme3test.model.shape.TestBox";
-
-					createCanvas(HexapodJME.class.getName());
+					createCanvas(HexapodJME.class);
 					createFrame();
 					frame.getContentPane().add(canvas);
 					handler[0] = new HexapodControlPanel(new HexapodConverter(((HexapodJME) app).getModel()));
@@ -216,53 +154,19 @@ public class HexapodFrame {
 				}
 			});
 
-			if (args.length > 0) {
-				final String portName = args[0];
-				try {
-					SerialPort serial;
-					final CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-					try {
-						final CommPort commPort = portIdentifier.open(HexapodFrame.class.getName(), 2000);
-						if (!(commPort instanceof SerialPort)) {
-							commPort.close();
-							throw new ClassCastException("portName '" + portName
-									+ "' does not refer to a serial port");
-						}
-
-						serial = (SerialPort) commPort;
-						try {
-							serial.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
-									SerialPort.PARITY_NONE);
-							final HexapodMessageInputStream in = new HexapodMessageInputStream(
-									serial.getInputStream());
-							while (true) {
-								final LegMessage readMessage = in.readMessage();
-								for (final HexapodLeg leg : HexapodLeg.values()) {
-									for (final HexapodArticulation articulation : HexapodArticulation
-											.values()) {
-										// TODO
-										handler[0].getSpinModels().get(leg).get(articulation)
-												.setValue(readMessage.getUnsignedByte(leg, articulation));
-									}
-								}
-							}
-						} catch (final UnsupportedCommOperationException e) {
-							serial.close();
-							throw new HexapodException("Can not configure port", e);
-						}
-					} catch (final PortInUseException e) {
-						throw new HexapodException("Port '" + portName + "' is already owned by : "
-								+ portIdentifier.getCurrentOwner(), e);
+			if (portName != null) {
+				final ExecutorService executor = Executors.newSingleThreadExecutor();
+				executor.execute(new MessageReaderRunnable(portName, handler[0].getSpinModels()));
+				frame.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowClosed(final WindowEvent e) {
+						executor.shutdownNow();
 					}
-				} catch (final NoSuchPortException e) {
-					throw new HexapodException("port '" + portName + "' not found", e);
-				}
-
+				});
 			}
 
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}
-
 }
