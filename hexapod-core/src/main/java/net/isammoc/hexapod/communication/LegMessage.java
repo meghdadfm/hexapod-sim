@@ -19,8 +19,7 @@ public class LegMessage extends ServoMessage {
 	 *             If either {@code leg} or {@code articulation} is
 	 *             <code>null</code>.
 	 */
-	public void setByte(final HexapodLeg leg,
-			final HexapodArticulation articulation, final byte value)
+	public void setByte(final HexapodLeg leg, final HexapodArticulation articulation, final byte value)
 			throws IllegalArgumentException {
 		if (leg == null) {
 			throw new NullPointerException("leg must not be null");
@@ -28,27 +27,26 @@ public class LegMessage extends ServoMessage {
 		if (articulation == null) {
 			throw new NullPointerException("articulation must not be null");
 		}
-		this.setByte(HexapodServo.fromLegArticulation(leg, articulation)
-				.ordinal(), value);
+		this.setByte(HexapodServo.fromLegArticulation(leg, articulation).ordinal(), value);
 	}
 
-	public void setUnsignedByte(final HexapodLeg leg,
-			final HexapodArticulation articulation, final int value) {
-		this.setUnsignedByte(HexapodServo
-				.fromLegArticulation(leg, articulation).ordinal(), value);
+	public void setUnsignedByte(final HexapodLeg leg, final HexapodArticulation articulation, final int value) {
+		this.setUnsignedByte(HexapodServo.fromLegArticulation(leg, articulation).ordinal(), value);
 	}
 
-	public void setBytes(final HexapodLeg leg, final byte shoulder,
-			final byte elbow, final byte wrist) {
-		setByte(leg, HexapodArticulation.SHOULDER, shoulder);
-		setByte(leg, HexapodArticulation.ELBOW, elbow);
-		setByte(leg, HexapodArticulation.WRIST, wrist);
+	public void setBytes(final HexapodLeg leg, final byte shoulder, final byte elbow, final byte wrist) {
+		this.setByte(leg, HexapodArticulation.SHOULDER, shoulder);
+		this.setByte(leg, HexapodArticulation.ELBOW, elbow);
+		this.setByte(leg, HexapodArticulation.WRIST, wrist);
 	}
 
-	public void setUnsignedBytes(final HexapodLeg leg, final int shoulder,
-			final int elbow, final int wrist) {
-		setUnsignedByte(leg, HexapodArticulation.SHOULDER, shoulder);
-		setUnsignedByte(leg, HexapodArticulation.ELBOW, elbow);
-		setUnsignedByte(leg, HexapodArticulation.WRIST, wrist);
+	public void setUnsignedBytes(final HexapodLeg leg, final int shoulder, final int elbow, final int wrist) {
+		this.setUnsignedByte(leg, HexapodArticulation.SHOULDER, shoulder);
+		this.setUnsignedByte(leg, HexapodArticulation.ELBOW, elbow);
+		this.setUnsignedByte(leg, HexapodArticulation.WRIST, wrist);
+	}
+
+	public int getUnsignedByte(final HexapodLeg leg, final HexapodArticulation articulation) {
+		return super.getUnsignedByte(HexapodServo.fromLegArticulation(leg, articulation));
 	}
 }
