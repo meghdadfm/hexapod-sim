@@ -29,6 +29,8 @@ public class HexapodJME extends SimpleApplication {
 	private static float MASS_SHOULDER = 1f;
 	private static float MASS_ARM = 1f;
 	private static float MASS_HAND = 1f;
+	private static float MOTOR_IMPUSLE = .1f;
+	private static float MOTOR_VELOCITY = .2f;
 
 	private static boolean PHYSICS_ACTIVE = true;
 
@@ -43,13 +45,13 @@ public class HexapodJME extends SimpleApplication {
 	}
 
 	/** Model for joints */
-	private Map<HexapodLeg, Map<HexapodArticulation, Integer>> model;
+	private Map<HexapodLeg, Map<HexapodArticulation, Float>> wantedAngles;
 	{
-		this.model = new EnumMap<HexapodLeg, Map<HexapodArticulation, Integer>>(HexapodLeg.class);
+		this.wantedAngles = new EnumMap<HexapodLeg, Map<HexapodArticulation, Float>>(HexapodLeg.class);
 		for (final HexapodLeg leg : HexapodLeg.values()) {
-			this.model.put(leg, new EnumMap<HexapodArticulation, Integer>(HexapodArticulation.class));
+			this.wantedAngles.put(leg, new EnumMap<HexapodArticulation, Float>(HexapodArticulation.class));
 			for (final HexapodArticulation articulation : HexapodArticulation.values()) {
-				this.model.get(leg).put(articulation, 0);
+				this.wantedAngles.get(leg).put(articulation, 0f);
 			}
 		}
 	}
@@ -87,7 +89,9 @@ public class HexapodJME extends SimpleApplication {
 		this.rootNode.attachChild(this.hexapod);
 		this.bulletAppState.getPhysicsSpace().addAll(this.hexapod);
 		for (final HexapodLeg leg : HexapodLeg.values()) {
-			for (final PhysicsHingeJoint joint : this.joints.get(leg).values()) {
+			for (final HexapodArticulation articulation : HexapodArticulation.values()) {
+				final PhysicsHingeJoint joint = this.joints.get(leg).get(articulation);
+				this.zeroAngles.get(leg).put(articulation, joint.getHingeAngle() % FastMath.TWO_PI);
 				this.bulletAppState.getPhysicsSpace().add(joint);
 			}
 		}
@@ -159,7 +163,6 @@ public class HexapodJME extends SimpleApplication {
 		shoulder.enableMotor(true, 0, 1);
 		shoulder.setCollisionBetweenLinkedBodys(false);
 		this.joints.get(leg).put(HexapodArticulation.SHOULDER, shoulder);
-		this.zeroAngles.get(leg).put(HexapodArticulation.SHOULDER, shoulder.getHingeAngle());
 	}
 
 	/**
@@ -186,7 +189,6 @@ public class HexapodJME extends SimpleApplication {
 		elbow.setCollisionBetweenLinkedBodys(false);
 		elbow.enableMotor(true, 0, 1);
 		this.joints.get(leg).put(HexapodArticulation.ELBOW, elbow);
-		this.zeroAngles.get(leg).put(HexapodArticulation.ELBOW, elbow.getHingeAngle());
 
 		return shoulderNode;
 	}
@@ -207,7 +209,6 @@ public class HexapodJME extends SimpleApplication {
 		wrist.enableMotor(true, 0, 1);
 		wrist.setCollisionBetweenLinkedBodys(false);
 		this.joints.get(leg).put(HexapodArticulation.WRIST, wrist);
-		this.zeroAngles.get(leg).put(HexapodArticulation.WRIST, wrist.getHingeAngle());
 
 		return armNode;
 	}
@@ -248,27 +249,34 @@ public class HexapodJME extends SimpleApplication {
 		for (final HexapodLeg leg : HexapodLeg.values()) {
 			for (final HexapodArticulation articulation : HexapodArticulation.values()) {
 				final PhysicsHingeJoint joint = this.joints.get(leg).get(articulation);
-				final float zeroAngle = this.zeroAngles.get(leg).get(articulation);
-				final float current = joint.getHingeAngle();
-				final int wanted = this.model.get(leg).get(articulation);
-				final float stepAngle = FastMath.PI / 256;
+				final float current = joint.getHingeAngle() % FastMath.TWO_PI;
+				float wantedAngle = ((this.zeroAngles.get(leg).get(articulation) % FastMath.TWO_PI) + this.wantedAngles
+						.get(leg).get(articulation)) % FastMath.TWO_PI;
 
-				final float wantedAngle = zeroAngle + wanted * stepAngle;
-
-				if (Math.abs(current - wantedAngle) < FastMath.PI / 90) {
-					joint.enableMotor(true, 0, 1);
-				} else if (current < wantedAngle) {
-					joint.enableMotor(true, 1, 1);
-				} else {
-					joint.enableMotor(true, -1, 1);
+				if (current - wantedAngle > FastMath.PI) {
+					wantedAngle += FastMath.TWO_PI;
 				}
-				joint.getBodyA().activate();
-				joint.getBodyB().activate();
+
+				if (wantedAngle - current > FastMath.PI) {
+					wantedAngle -= FastMath.TWO_PI;
+				}
+
+				if (Math.abs((current - wantedAngle) % FastMath.TWO_PI) < FastMath.PI / 90) {
+					joint.enableMotor(true, 0, MOTOR_IMPUSLE);
+				} else {
+					if (current - wantedAngle < 0) {
+						joint.enableMotor(true, MOTOR_VELOCITY, MOTOR_IMPUSLE);
+					} else {
+						joint.enableMotor(true, -MOTOR_VELOCITY, MOTOR_IMPUSLE);
+					}
+					joint.getBodyA().activate();
+					joint.getBodyB().activate();
+				}
 			}
 		}
 	}
 
-	public Map<HexapodLeg, Map<HexapodArticulation, Integer>> getModel() {
-		return this.model;
+	public Map<HexapodLeg, Map<HexapodArticulation, Float>> getModel() {
+		return this.wantedAngles;
 	}
 }
