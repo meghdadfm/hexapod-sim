@@ -25,23 +25,52 @@ public class HexapodConverter {
 	public void setValue(final HexapodLeg leg, final HexapodArticulation articulation, final int value) {
 		final float var;
 		final float sens;
-		switch (articulation) {
-			case SHOULDER:
-				var = 127 * STEP;
-				sens = -1;
+		final int realValue;
+		final float defaultSens;
+		switch (leg) {
+			case RIGHT_FRONT:
+			case RIGHT_MIDDLE:
+			case RIGHT_REAR:
+				realValue = value;
+				switch (articulation) {
+					case SHOULDER:
+						var = 127 * STEP;
+						sens = -1;
+						break;
+					case ELBOW:
+						var = 226 * STEP - FastMath.HALF_PI;
+						sens = -1;
+						break;
+					case WRIST:
+						var = -71 * STEP;
+						sens = 1;
+						break;
+					default:
+						var = 0;
+						sens = 1;
+				}
 				break;
-			case ELBOW:
-				var = 226 * STEP - FastMath.HALF_PI;
-				sens = -1;
-				break;
-			case WRIST:
-				var = -71 * STEP;
-				sens = 1;
-				break;
+			case LEFT_FRONT:
+			case LEFT_MIDDLE:
+			case LEFT_REAR:
 			default:
-				var = 0;
-				sens = 1;
+				realValue = 254 - value;
+				switch (articulation) {
+					case SHOULDER:
+						var = 127 * STEP + FastMath.PI;
+						sens = 1;
+						break;
+					case ELBOW:
+						var = 226 * STEP - FastMath.HALF_PI;
+						sens = -1;
+						break;
+					case WRIST:
+					default:
+						var = -71 * STEP;
+						sens = 1;
+						break;
+				}
 		}
-		this.wantedAngles.get(leg).put(articulation, sens * value * STEP + var);
+		this.wantedAngles.get(leg).put(articulation, sens * realValue * STEP + var);
 	}
 }

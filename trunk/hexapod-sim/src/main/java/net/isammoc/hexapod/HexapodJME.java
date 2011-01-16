@@ -30,7 +30,7 @@ public class HexapodJME extends SimpleApplication {
 	private static float MASS_ARM = 1f;
 	private static float MASS_HAND = 1f;
 	private static float MOTOR_IMPUSLE = .1f;
-	private static float MOTOR_VELOCITY = .2f;
+	private static float MOTOR_VELOCITY = 3f;
 
 	private static boolean PHYSICS_ACTIVE = true;
 
