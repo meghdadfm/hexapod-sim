@@ -23,14 +23,16 @@ import com.jme3.scene.shape.Box;
 import com.jme3.system.JmeContext.Type;
 
 public class HexapodJME extends SimpleApplication {
+	private static final float FLOOR_FRICTION = 10000f;
+	private static float MASS_BASE = 100f;
+	private static float MASS_SHOULDER = 10f;
+	private static float MASS_ARM = 10f;
+	private static float MASS_HAND = 10f;
+	private static float MOTOR_IMPULSE = 1f;
+	private static float MOTOR_VELOCITY = 1f;
+
 	private BulletAppState bulletAppState;
 	private final Node hexapod = new Node();
-	private static float MASS_BASE = 1f;
-	private static float MASS_SHOULDER = 1f;
-	private static float MASS_ARM = 1f;
-	private static float MASS_HAND = 1f;
-	private static float MOTOR_IMPUSLE = .1f;
-	private static float MOTOR_VELOCITY = 3f;
 
 	private static boolean PHYSICS_ACTIVE = true;
 
@@ -135,6 +137,7 @@ public class HexapodJME extends SimpleApplication {
 		node.setCollideWithGroups(PhysicsCollisionObject.COLLISION_GROUP_01);
 		node.attachDebugShape(this.assetManager);
 		node.setLocalTransform(transform);
+		node.setFriction(FLOOR_FRICTION);
 	}
 
 	/**
@@ -234,6 +237,7 @@ public class HexapodJME extends SimpleApplication {
 		final PhysicsNode floorNode = new PhysicsNode(floor, new BoxCollisionShape(new Vector3f(100f, 0.1f,
 				50f)), 0);
 		floorNode.setLocalTranslation(0, -0.1f, 0);
+		floorNode.setFriction(FLOOR_FRICTION);
 		floorNode.setName("floor");
 		this.rootNode.attachChild(floorNode);
 		this.bulletAppState.getPhysicsSpace().add(floorNode);
@@ -262,12 +266,12 @@ public class HexapodJME extends SimpleApplication {
 				}
 
 				if (Math.abs((current - wantedAngle) % FastMath.TWO_PI) < FastMath.PI / 90) {
-					joint.enableMotor(true, 0, MOTOR_IMPUSLE);
+					joint.enableMotor(true, 0, MOTOR_IMPULSE);
 				} else {
 					if (current - wantedAngle < 0) {
-						joint.enableMotor(true, MOTOR_VELOCITY, MOTOR_IMPUSLE);
+						joint.enableMotor(true, MOTOR_VELOCITY, MOTOR_IMPULSE);
 					} else {
-						joint.enableMotor(true, -MOTOR_VELOCITY, MOTOR_IMPUSLE);
+						joint.enableMotor(true, -MOTOR_VELOCITY, MOTOR_IMPULSE);
 					}
 					joint.getBodyA().activate();
 					joint.getBodyB().activate();
