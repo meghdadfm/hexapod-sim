@@ -7,8 +7,8 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.control.PhysicsRigidBodyControl;
 import com.jme3.bullet.joints.PhysicsHingeJoint;
-import com.jme3.bullet.nodes.PhysicsNode;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -24,12 +24,12 @@ import com.jme3.system.JmeContext.Type;
 
 public class HexapodJME extends SimpleApplication {
 	private static final float FLOOR_FRICTION = 10000f;
-	private static float MASS_BASE = 100f;
-	private static float MASS_SHOULDER = 10f;
-	private static float MASS_ARM = 10f;
-	private static float MASS_HAND = 10f;
-	private static float MOTOR_IMPULSE = 1f;
-	private static float MOTOR_VELOCITY = 1f;
+	private static final float MASS_BASE = 100f;
+	private static final float MASS_SHOULDER = 10f;
+	private static final float MASS_ARM = 10f;
+	private static final float MASS_HAND = 10f;
+	private static final float MOTOR_IMPULSE = 1f;
+	private static final float MOTOR_VELOCITY = 1f;
 
 	private BulletAppState bulletAppState;
 	private final Node hexapod = new Node();
@@ -106,21 +106,25 @@ public class HexapodJME extends SimpleApplication {
 	 *            The combined position and orientation.
 	 */
 	private void createHexapod(final Transform transform) {
-		final PhysicsNode baseNode = new PhysicsNode(this.shapeFactory.createBaseShape(), MASS_BASE);
-		this.placeNode(transform, baseNode);
+
+		final Node baseNode = new Node("base");
+		final PhysicsRigidBodyControl baseControl = new PhysicsRigidBodyControl(
+				this.shapeFactory.createBaseShape(), MASS_BASE);
+		baseNode.addControl(baseControl);
+		this.placeNode(transform, baseControl);
 		baseNode.setName("base");
 		this.hexapod.attachChild(baseNode);
 		this.hexapod.setName("hexapod");
 
-		this.createLeg(baseNode, HexapodLeg.LEFT_FRONT, transform, new Vector3f(3.0f, 1f, 4.5f), +0.588f);
-		this.createLeg(baseNode, HexapodLeg.LEFT_MIDDLE, transform, new Vector3f(3.8f, 1f, 0f),
+		this.createLeg(baseControl, HexapodLeg.LEFT_FRONT, transform, new Vector3f(3.0f, 1f, 4.5f), +0.588f);
+		this.createLeg(baseControl, HexapodLeg.LEFT_MIDDLE, transform, new Vector3f(3.8f, 1f, 0f),
 				FastMath.HALF_PI);
-		this.createLeg(baseNode, HexapodLeg.LEFT_REAR, transform, new Vector3f(3.0f, 1f, -4.5f),
+		this.createLeg(baseControl, HexapodLeg.LEFT_REAR, transform, new Vector3f(3.0f, 1f, -4.5f),
 				FastMath.PI - 0.588f);
-		this.createLeg(baseNode, HexapodLeg.RIGHT_FRONT, transform, new Vector3f(-3.0f, 1f, 4.5f), -0.588f);
-		this.createLeg(baseNode, HexapodLeg.RIGHT_MIDDLE, transform, new Vector3f(-3.8f, 1f, 0f),
+		this.createLeg(baseControl, HexapodLeg.RIGHT_FRONT, transform, new Vector3f(-3.0f, 1f, 4.5f), -0.588f);
+		this.createLeg(baseControl, HexapodLeg.RIGHT_MIDDLE, transform, new Vector3f(-3.8f, 1f, 0f),
 				-FastMath.HALF_PI);
-		this.createLeg(baseNode, HexapodLeg.RIGHT_REAR, transform, new Vector3f(-3.0f, 1f, -4.5f),
+		this.createLeg(baseControl, HexapodLeg.RIGHT_REAR, transform, new Vector3f(-3.0f, 1f, -4.5f),
 				0.588f - FastMath.PI);
 	}
 
@@ -132,12 +136,13 @@ public class HexapodJME extends SimpleApplication {
 	 * @param node
 	 *            node to place.
 	 */
-	private void placeNode(final Transform transform, final PhysicsNode node) {
+	private void placeNode(final Transform transform, final PhysicsRigidBodyControl node) {
 		node.setCollisionGroup(PhysicsCollisionObject.COLLISION_GROUP_02);
 		node.setCollideWithGroups(PhysicsCollisionObject.COLLISION_GROUP_01);
 		node.attachDebugShape(this.assetManager);
-		node.setLocalTransform(transform);
 		node.setFriction(FLOOR_FRICTION);
+		node.setPhysicsLocation(transform.getTranslation());
+		node.setPhysicsRotation(transform.getRotation().toRotationMatrix());
 	}
 
 	/**
@@ -154,15 +159,15 @@ public class HexapodJME extends SimpleApplication {
 	 * @param angle
 	 *            start angle of the leg.
 	 */
-	private void createLeg(final PhysicsNode base, final HexapodLeg leg, final Transform baseTransform,
-			final Vector3f pivotBase, final float angle) {
+	private void createLeg(final PhysicsRigidBodyControl base, final HexapodLeg leg,
+			final Transform baseTransform, final Vector3f pivotBase, final float angle) {
 		final Transform transform = new Transform(pivotBase, new Quaternion().fromAngleAxis(angle,
 				Vector3f.UNIT_Y)).combineWithParent(baseTransform);
 
-		final PhysicsNode shoulderNode = this.createShoulder(leg, transform);
+		final PhysicsRigidBodyControl shoulderControl = this.createShoulder(leg, transform);
 
-		final PhysicsHingeJoint shoulder = new PhysicsHingeJoint(base.getRigidBody(),
-				shoulderNode.getRigidBody(), pivotBase, Vector3f.ZERO, Vector3f.UNIT_Y, Vector3f.UNIT_Y);
+		final PhysicsHingeJoint shoulder = new PhysicsHingeJoint(base, shoulderControl, pivotBase,
+				Vector3f.ZERO, Vector3f.UNIT_Y, Vector3f.UNIT_Y);
 		shoulder.enableMotor(true, 0, 1);
 		shoulder.setCollisionBetweenLinkedBodys(false);
 		this.joints.get(leg).put(HexapodArticulation.SHOULDER, shoulder);
@@ -177,51 +182,57 @@ public class HexapodJME extends SimpleApplication {
 	 *            Location and orientation combined.
 	 * @return the node.
 	 */
-	private PhysicsNode createShoulder(final HexapodLeg leg, final Transform transform) {
-		final PhysicsNode shoulderNode = new PhysicsNode(this.shapeFactory.createShoulderShape(),
-				MASS_SHOULDER);
-		this.placeNode(transform, shoulderNode);
+	private PhysicsRigidBodyControl createShoulder(final HexapodLeg leg, final Transform transform) {
+		final PhysicsRigidBodyControl shoulderControl = new PhysicsRigidBodyControl(
+				this.shapeFactory.createShoulderShape(), MASS_SHOULDER);
+		final Node shoulderNode = new Node("shoulder");
+		shoulderNode.addControl(shoulderControl);
+		this.placeNode(transform, shoulderControl);
 		this.hexapod.attachChild(shoulderNode);
 
-		final PhysicsNode armNode = this.createArm(leg,
+		final PhysicsRigidBodyControl armControl = this.createArm(leg,
 				new Transform(new Vector3f(0, 0, 2f)).combineWithParent(transform));
 
-		final PhysicsHingeJoint elbow = new PhysicsHingeJoint(shoulderNode.getRigidBody(),
-				armNode.getRigidBody(), new Vector3f(0, 0, 1.3f), Vector3f.ZERO, Vector3f.UNIT_X,
-				Vector3f.UNIT_X);
+		final PhysicsHingeJoint elbow = new PhysicsHingeJoint(shoulderControl, armControl, new Vector3f(0, 0,
+				1.3f), Vector3f.ZERO, Vector3f.UNIT_X, Vector3f.UNIT_X);
 		elbow.setCollisionBetweenLinkedBodys(false);
 		elbow.enableMotor(true, 0, 1);
 		this.joints.get(leg).put(HexapodArticulation.ELBOW, elbow);
 
-		return shoulderNode;
+		return shoulderControl;
 	}
 
-	private PhysicsNode createArm(final HexapodLeg leg, final Transform transform) {
-		final PhysicsNode armNode = new PhysicsNode(this.shapeFactory.createArmShape(), MASS_ARM);
-		this.placeNode(transform, armNode);
+	private PhysicsRigidBodyControl createArm(final HexapodLeg leg, final Transform transform) {
+		final PhysicsRigidBodyControl armControl = new PhysicsRigidBodyControl(
+				this.shapeFactory.createArmShape(), MASS_ARM);
+		final Node armNode = new Node("arm");
+		armNode.addControl(armControl);
+		this.placeNode(transform, armControl);
 		this.hexapod.attachChild(armNode);
 
-		final PhysicsNode handNode = this.createHand(new Transform(new Vector3f(2, 4.6f, 0))
+		final PhysicsRigidBodyControl handControl = this.createHand(new Transform(new Vector3f(2, 4.6f, 0))
 				.combineWithParent(transform));
 		final Quaternion quaternion = new Quaternion();
 		quaternion.fromAngleAxis(FastMath.PI / 3, Vector3f.UNIT_X);
 
-		final PhysicsHingeJoint wrist = new PhysicsHingeJoint(armNode.getRigidBody(),
-				handNode.getRigidBody(), new Vector3f(0.25f, 4.6f, 0.25f), Vector3f.ZERO, Vector3f.UNIT_X,
-				Vector3f.UNIT_X);
+		final PhysicsHingeJoint wrist = new PhysicsHingeJoint(armControl, handControl, new Vector3f(0.25f,
+				4.6f, 0.25f), Vector3f.ZERO, Vector3f.UNIT_X, Vector3f.UNIT_X);
 		wrist.enableMotor(true, 0, 1);
 		wrist.setCollisionBetweenLinkedBodys(false);
 		this.joints.get(leg).put(HexapodArticulation.WRIST, wrist);
 
-		return armNode;
+		return armControl;
 	}
 
-	private PhysicsNode createHand(final Transform transform) {
-		final PhysicsNode handNode = new PhysicsNode(this.shapeFactory.createHandShape(), MASS_HAND);
-		this.placeNode(transform, handNode);
+	private PhysicsRigidBodyControl createHand(final Transform transform) {
+		final PhysicsRigidBodyControl handControl = new PhysicsRigidBodyControl(
+				this.shapeFactory.createHandShape(), MASS_HAND);
+		final Node handNode = new Node("hand");
+		handNode.addControl(handControl);
+		this.placeNode(transform, handControl);
 		this.hexapod.attachChild(handNode);
 
-		return handNode;
+		return handControl;
 	}
 
 	/** Make a solid floor and add it to the scene. */
@@ -234,13 +245,13 @@ public class HexapodJME extends SimpleApplication {
 		final Geometry floor = new Geometry("floor", floorBox);
 		floor.setMaterial(floor_mat);
 		floor.setShadowMode(ShadowMode.Receive);
-		final PhysicsNode floorNode = new PhysicsNode(floor, new BoxCollisionShape(new Vector3f(100f, 0.1f,
-				50f)), 0);
-		floorNode.setLocalTranslation(0, -0.1f, 0);
-		floorNode.setFriction(FLOOR_FRICTION);
-		floorNode.setName("floor");
-		this.rootNode.attachChild(floorNode);
-		this.bulletAppState.getPhysicsSpace().add(floorNode);
+		final PhysicsRigidBodyControl floorControl = new PhysicsRigidBodyControl(new BoxCollisionShape(
+				new Vector3f(100f, 0.1f, 50f)), 0);
+		floor.addControl(floorControl);
+		floorControl.setPhysicsLocation(new Vector3f(0, -0.1f, 0));
+		floorControl.setFriction(FLOOR_FRICTION);
+		this.rootNode.attachChild(floor);
+		this.bulletAppState.getPhysicsSpace().add(floorControl);
 	}
 
 	public static void main(final String[] args) {

@@ -26,7 +26,6 @@ public class HexapodConverter {
 		final float var;
 		final float sens;
 		final int realValue;
-		final float defaultSens;
 		switch (leg) {
 			case RIGHT_FRONT:
 			case RIGHT_MIDDLE:
