@@ -12,6 +12,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 public class HexapodControlPanel extends JPanel {
+	private static final long serialVersionUID = 1L;
 	private final HexapodConverter model;
 	private final Map<HexapodLeg, Map<HexapodArticulation, SpinnerNumberModel>> spinModels;
 	{

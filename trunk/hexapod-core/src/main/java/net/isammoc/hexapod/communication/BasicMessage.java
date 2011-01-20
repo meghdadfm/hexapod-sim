@@ -25,7 +25,7 @@ public class BasicMessage implements IHexapodMessage {
 	protected static void checkByte(final byte b)
 			throws IllegalArgumentException {
 		if ((b == 0x00) || (b == (byte) 0xff)) {
-			throw new IllegalArgumentException("value must NOT be 0x00 or 0xff");
+			throw new IllegalArgumentException(String.format("value must NOT be 0x00 or 0xff but got %x", b));
 		}
 	}
 
@@ -46,8 +46,7 @@ public class BasicMessage implements IHexapodMessage {
 	protected BasicMessage(final byte[] bytes)
 			throws IllegalArgumentException {
 		if (bytes.length != MESSAGE_LENGTH) {
-			throw new IllegalArgumentException("bytes must be "
-					+ MESSAGE_LENGTH + " length");
+			throw new IllegalArgumentException("bytes must be " + MESSAGE_LENGTH + " length");
 		}
 		for (int i = 0; i < MESSAGE_LENGTH; i++) {
 			checkByte(bytes[i]);
@@ -67,9 +66,8 @@ public class BasicMessage implements IHexapodMessage {
 
 	public void setByte(final int index, final byte value) {
 		if ((index < 0) || (index >= MESSAGE_LENGTH)) {
-			throw new IndexOutOfBoundsException(
-					"index must be comprised between 0 and "
-							+ (MESSAGE_LENGTH - 1) + " (inclusive)");
+			throw new IndexOutOfBoundsException("index must be comprised between 0 and "
+					+ (MESSAGE_LENGTH - 1) + " (inclusive)");
 		}
 		checkByte(value);
 

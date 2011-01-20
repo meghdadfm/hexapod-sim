@@ -121,6 +121,9 @@ public class HexapodFrame {
 				portName = args[0];
 			} else {
 				final ArrayList<String> ports = new ArrayList<String>();
+
+				// From Java 1.4 compatible library
+				@SuppressWarnings("unchecked")
 				final Enumeration<CommPortIdentifier> portIdentifiers = CommPortIdentifier
 						.getPortIdentifiers();
 				ports.add("<none>");
