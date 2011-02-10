@@ -16,6 +16,8 @@ public class MessageReaderRunnable implements Runnable {
 	private final String portName;
 	private final Map<HexapodLeg, Map<HexapodArticulation, SpinnerNumberModel>> model;
 
+	private static final byte ACK = '1';
+
 	public MessageReaderRunnable(final String portName,
 			final Map<HexapodLeg, Map<HexapodArticulation, SpinnerNumberModel>> model) {
 		this.portName = portName;
@@ -48,6 +50,7 @@ public class MessageReaderRunnable implements Runnable {
 									.setValue(readMessage.getUnsignedByte(leg, articulation));
 						}
 					}
+					// TODO Renvoyer ACK ici quand c'est fini
 				}
 			} finally {
 				commPort.close();

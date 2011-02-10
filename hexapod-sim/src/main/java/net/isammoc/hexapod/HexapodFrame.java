@@ -38,6 +38,8 @@ import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.concurrent.Callable;
@@ -148,7 +150,19 @@ public class HexapodFrame {
 					createCanvas(HexapodJME.class);
 					createFrame();
 					frame.getContentPane().add(canvas);
-					handler[0] = new HexapodControlPanel(new HexapodConverter(((HexapodJME) app).getModel()));
+					final HexapodNode hexapod = ((HexapodJME) app).getHexapod();
+					handler[0] = new HexapodControlPanel(new HexapodConverter(hexapod.getModel()));
+					hexapod.addPropertyChangeListener(HexapodNode.PROPERTY_MOVING,
+							new PropertyChangeListener() {
+								@Override
+								public void propertyChange(final PropertyChangeEvent evt) {
+									if ((Boolean) evt.getNewValue()) {
+										System.out.println("Start moving");
+									} else {
+										System.out.println("STOP");
+									}
+								}
+							});
 					frame.getContentPane().add(handler[0], BorderLayout.EAST);
 					frame.pack();
 					startApp();
