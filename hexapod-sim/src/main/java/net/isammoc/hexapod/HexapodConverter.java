@@ -1,17 +1,15 @@
 package net.isammoc.hexapod;
 
-import java.util.Map;
-
 import net.isammoc.hexapod.communication.LegMessage;
 
 import com.jme3.math.FastMath;
 
 public class HexapodConverter {
 	private static final float STEP = FastMath.PI / 256;
-	private final Map<HexapodLeg, Map<HexapodArticulation, Float>> wantedAngles;
+	private final WantedAnglesAware hexapod;
 
-	public HexapodConverter(final Map<HexapodLeg, Map<HexapodArticulation, Float>> wantedAngles) {
-		this.wantedAngles = wantedAngles;
+	public HexapodConverter(final WantedAnglesAware hexapod) {
+		this.hexapod = hexapod;
 	}
 
 	public void setMessage(final LegMessage msg) {
@@ -70,6 +68,6 @@ public class HexapodConverter {
 						break;
 				}
 		}
-		this.wantedAngles.get(leg).put(articulation, sens * realValue * STEP + var);
+		this.hexapod.setWantedAngle(leg, articulation, sens * realValue * STEP + var);
 	}
 }

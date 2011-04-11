@@ -1,9 +1,12 @@
 package net.isammoc.hexapod;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.EnumMap;
 import java.util.Map;
+
+import net.isammoc.hexapod.HexapodVelocitiesHandler.DIRECTION;
 
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
@@ -20,18 +23,19 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
-public class HexapodNode extends Node {
+public class HexapodNode extends Node implements WantedAnglesAware {
 	public static final String PROPERTY_MOVING = "moving";
 	private static final float FLOOR_FRICTION = 10000f;
-	private static final float MASS_BASE = 100f;
-	private static final float MASS_SHOULDER = 10f;
-	private static final float MASS_ARM = 10f;
+	private static final float MASS_BASE = 50f;
+	private static final float MASS_SHOULDER = 5f;
+	private static final float MASS_ARM = 5f;
 	private static final float MASS_HAND = 10f;
-	private static final float MOTOR_IMPULSE = 1f;
-	private static final float MOTOR_VELOCITY = 1f;
+	private static final float MOTOR_IMPULSE = 5f;
+	private static final float MOTOR_VELOCITY = 2f;
 
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-	private boolean moving = false;
+	private final boolean moving = false;
+	private final HexapodVelocitiesHandler velocities = new HexapodVelocitiesHandler();
 
 	/** Joints of the hexapod. */
 	private Map<HexapodLeg, Map<HexapodArticulation, HingeJoint>> joints;
@@ -90,6 +94,13 @@ public class HexapodNode extends Node {
 				this.zeroAngles.get(leg).put(articulation, joint.getHingeAngle() % FastMath.TWO_PI);
 			}
 		}
+		this.velocities.addPropertyChangeListener(PROPERTY_MOVING, new PropertyChangeListener() {
+
+			@Override
+			public void propertyChange(final PropertyChangeEvent evt) {
+				HexapodNode.this.pcs.firePropertyChange(PROPERTY_MOVING, evt.getOldValue(), evt.getNewValue());
+			}
+		});
 	}
 
 	/**
@@ -198,13 +209,12 @@ public class HexapodNode extends Node {
 	}
 
 	public void simpleUpdate(final float tpf) {
-		boolean current_moving = false;
 		for (final HexapodLeg leg : HexapodLeg.values()) {
 			for (final HexapodArticulation articulation : HexapodArticulation.values()) {
 				final HingeJoint joint = this.joints.get(leg).get(articulation);
 				final float current = joint.getHingeAngle() % FastMath.TWO_PI;
-				float wantedAngle = ((this.zeroAngles.get(leg).get(articulation) % FastMath.TWO_PI) + this.wantedAngles
-						.get(leg).get(articulation)) % FastMath.TWO_PI;
+				float wantedAngle = (this.zeroAngles.get(leg).get(articulation) + this.wantedAngles.get(leg)
+						.get(articulation)) % FastMath.TWO_PI;
 
 				if (current - wantedAngle > FastMath.PI) {
 					wantedAngle += FastMath.TWO_PI;
@@ -214,25 +224,64 @@ public class HexapodNode extends Node {
 					wantedAngle -= FastMath.TWO_PI;
 				}
 
-				if (Math.abs((current - wantedAngle) % FastMath.TWO_PI) < FastMath.PI / 90) {
-					joint.enableMotor(true, 0, MOTOR_IMPULSE);
+				final float diff = Math.abs((current - wantedAngle) % FastMath.TWO_PI);
+				if (diff < (FastMath.PI / 100)) {
+					if (current - wantedAngle < 0) {
+						joint.enableMotor(true, MOTOR_VELOCITY / 10, MOTOR_IMPULSE);
+					} else {
+						joint.enableMotor(true, -MOTOR_VELOCITY / 10, MOTOR_IMPULSE);
+					}
+					this.velocities.setVelocity(leg, articulation, DIRECTION.NONE);
+				} else if (diff < (FastMath.PI / 80)) {
+					if (current - wantedAngle < 0) {
+						joint.enableMotor(true, MOTOR_VELOCITY / 5, MOTOR_IMPULSE);
+					} else {
+						joint.enableMotor(true, MOTOR_VELOCITY / 5, MOTOR_IMPULSE);
+					}
+					this.velocities.setVelocity(leg, articulation, DIRECTION.NONE);
 				} else {
-					current_moving = true;
 					if (current - wantedAngle < 0) {
 						joint.enableMotor(true, MOTOR_VELOCITY, MOTOR_IMPULSE);
+						this.velocities.setVelocity(leg, articulation, DIRECTION.FORWARD);
 					} else {
 						joint.enableMotor(true, -MOTOR_VELOCITY, MOTOR_IMPULSE);
+						this.velocities.setVelocity(leg, articulation, DIRECTION.BACKWARD);
 					}
-					joint.getBodyA().activate();
-					joint.getBodyB().activate();
 				}
 			}
 		}
-		this.pcs.firePropertyChange(PROPERTY_MOVING, this.moving, this.moving = current_moving);
 	}
 
-	public Map<HexapodLeg, Map<HexapodArticulation, Float>> getModel() {
-		return this.wantedAngles;
+	@Override
+	public void setWantedAngle(final HexapodLeg leg, final HexapodArticulation articulation, final float value) {
+		this.wantedAngles.get(leg).put(articulation, value);
+		final HingeJoint joint = this.joints.get(leg).get(articulation);
+		final float current = joint.getHingeAngle() % FastMath.TWO_PI;
+		float wantedAngle = (this.zeroAngles.get(leg).get(articulation) + this.wantedAngles.get(leg).get(
+				articulation))
+				% FastMath.TWO_PI;
+		if (current - wantedAngle > FastMath.PI) {
+			wantedAngle += FastMath.TWO_PI;
+		}
+
+		if (wantedAngle - current > FastMath.PI) {
+			wantedAngle -= FastMath.TWO_PI;
+		}
+
+		if (Math.abs((current - wantedAngle) % FastMath.TWO_PI) < FastMath.PI / 90) {
+			joint.enableMotor(true, 0, MOTOR_IMPULSE);
+			this.velocities.setVelocity(leg, articulation, DIRECTION.NONE);
+		} else {
+			if (current - wantedAngle < 0) {
+				joint.enableMotor(true, MOTOR_VELOCITY, MOTOR_IMPULSE);
+				this.velocities.setVelocity(leg, articulation, DIRECTION.FORWARD);
+			} else {
+				joint.enableMotor(true, -MOTOR_VELOCITY, MOTOR_IMPULSE);
+				this.velocities.setVelocity(leg, articulation, DIRECTION.BACKWARD);
+			}
+			joint.getBodyA().activate();
+			joint.getBodyB().activate();
+		}
 	}
 
 	@Override
@@ -242,7 +291,7 @@ public class HexapodNode extends Node {
 		for (final Spatial child : this.getChildren()) {
 			final RigidBodyControl control = child.getControl(RigidBodyControl.class);
 			control.setPhysicsLocation(control.getPhysicsLocation().add(t.getTranslation()));
-			control.setPhysicsRotation(control.getPhysicsRotation().mult(t.getRotation().toRotationMatrix()));
+			control.setPhysicsRotation(control.getPhysicsRotation().mult(t.getRotation()));
 			child.setLocalTransform(child.getLocalTransform().combineWithParent(t));
 		}
 	}

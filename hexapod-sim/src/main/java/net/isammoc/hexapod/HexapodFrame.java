@@ -36,6 +36,7 @@ import gnu.io.CommPortIdentifier;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
@@ -47,6 +48,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -64,6 +66,7 @@ public class HexapodFrame {
 	private static Canvas canvas;
 	private static Application app;
 	private static JFrame frame;
+	private static MessageReaderRunnable command;
 
 	private static void createFrame() {
 		frame = new JFrame("Test");
@@ -151,19 +154,28 @@ public class HexapodFrame {
 					createFrame();
 					frame.getContentPane().add(canvas);
 					final HexapodNode hexapod = ((HexapodJME) app).getHexapod();
-					handler[0] = new HexapodControlPanel(new HexapodConverter(hexapod.getModel()));
+					handler[0] = new HexapodControlPanel(new HexapodConverter(hexapod));
+					frame.getContentPane().add(handler[0], BorderLayout.EAST);
+
+					final JLabel movingLabel = new JLabel("...");
+					movingLabel.setOpaque(true);
 					hexapod.addPropertyChangeListener(HexapodNode.PROPERTY_MOVING,
 							new PropertyChangeListener() {
+
 								@Override
 								public void propertyChange(final PropertyChangeEvent evt) {
 									if ((Boolean) evt.getNewValue()) {
-										System.out.println("Start moving");
+										// MOVING
+										movingLabel.setBackground(Color.RED);
 									} else {
-										System.out.println("STOP");
+										// STOPPED
+										movingLabel.setBackground(Color.GREEN);
+										command.notifyHexapodStopped();
 									}
 								}
 							});
-					frame.getContentPane().add(handler[0], BorderLayout.EAST);
+					frame.getContentPane().add(movingLabel, BorderLayout.SOUTH);
+
 					frame.pack();
 					startApp();
 					frame.setLocationRelativeTo(null);
@@ -173,7 +185,9 @@ public class HexapodFrame {
 
 			if (portName != null) {
 				final ExecutorService executor = Executors.newSingleThreadExecutor();
-				executor.execute(new MessageReaderRunnable(portName, handler[0].getSpinModels()));
+				command = new MessageReaderRunnable(portName, handler[0].getSpinModels());
+
+				executor.execute(command);
 				frame.addWindowListener(new WindowAdapter() {
 					@Override
 					public void windowClosed(final WindowEvent e) {

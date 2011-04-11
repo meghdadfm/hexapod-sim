@@ -75,7 +75,7 @@
 		</pluginManagement>
 	</build>
 
-	<dependencies>
+	<dependencies><!--
 		<dependency>
 			<groupId>gluegen-rt</groupId>
 			<artifactId>gluegen-rt</artifactId>
@@ -83,14 +83,14 @@
 			<scope>system</scope>
 			<systemPath>${jme.path}/lib/gluegen-rt.jar</systemPath>
 		</dependency>
-		<dependency>
+		--><!--<dependency>
 			<groupId>jogl</groupId>
 			<artifactId>jogl</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>system</scope>
 			<systemPath>${jme.path}/lib/jogl.jar</systemPath>
 		</dependency>
-		<dependency>
+		--><dependency>
 			<groupId>j-ogg-oggd</groupId>
 			<artifactId>j-ogg-oggd</artifactId>
 			<version>1.0-SNAPSHOT</version>
@@ -139,14 +139,14 @@
 			<scope>system</scope>
 			<systemPath>${jme.path}/lib/lwjgl.jar</systemPath>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>com.jmonkeyengine</groupId>
 			<artifactId>jme3-jogl-natives</artifactId>
 			<version>3.0-SNAPSHOT</version>
 			<scope>system</scope>
 			<systemPath>${jme.path}/lib/jME3-jogl-natives.jar</systemPath>
 		</dependency>
-		<dependency>
+		--><dependency>
 			<groupId>com.jmonkeyengine</groupId>
 			<artifactId>jme3-lwjgl-natives</artifactId>
 			<version>3.0-SNAPSHOT</version>
@@ -158,7 +158,7 @@
 			<artifactId>jheora-debug</artifactId>
 			<version>0.6.0</version>
 			<scope>system</scope>
-			<systemPath>${jme.path}/lib/jheora-debug-0.6.0.jar</systemPath>
+			<systemPath>${jme.path}/lib/jheora-jst-debug-0.6.0.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>com.jmonkeyengine</groupId>
@@ -170,9 +170,9 @@
 		<dependency>
 			<groupId>nifty</groupId>
 			<artifactId>nifty</artifactId>
-			<version>1.2-SNAPSHOT</version>
+			<version>1.3-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>${jme.path}/lib/nifty-1.2-SNAPSHOT.jar</systemPath>
+			<systemPath>${jme.path}/lib/nifty-1.3-SNAPSHOT.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>net.isammoc</groupId>
