@@ -11,7 +11,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.JmeContext.Type;
 
@@ -37,16 +36,12 @@ public class HexapodJME extends SimpleApplication {
 
 		this.initFloor();
 
-		this.hexapod.setLocalTransform(new Transform(new Vector3f(0, 20, 0)));
+		this.hexapod.setLocalTransform(new Transform(new Vector3f(0, 10, 0)));
 
 		// Add hexapod to the world
 		this.rootNode.attachChild(this.hexapod);
 		this.bulletAppState.getPhysicsSpace().addAll(this.hexapod);
-
-		// this.hexapod.getControl(RigidBodyControl.class).attachDebugShape(this.assetManager);
-		for (final Spatial child : this.hexapod.getChildren()) {
-			child.getControl(RigidBodyControl.class).attachDebugShape(this.assetManager);
-		}
+		this.bulletAppState.getPhysicsSpace().enableDebug(this.assetManager);
 	}
 
 	@Override
